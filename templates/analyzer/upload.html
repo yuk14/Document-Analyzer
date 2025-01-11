@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8 text-center">Document Analyzer</h1>
+        
+        <!-- Upload Area -->
+        <div class="max-w-xl mx-auto">
+            <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors">
+                <p class="mb-2">Drag & Drop PDF file here</p>
+                <p>or</p>
+                <input type="file" id="file-input" class="hidden" accept=".pdf">
+                <button class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Browse Files</button>
+            </div>
+            
+            <!-- Loading Spinner -->
+            <div id="loading" class="hidden mt-8 text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                <p class="mt-4">Analyzing document...</p>
+            </div>
+            
+            <!-- Results Section -->
+            <div id="results" class="hidden mt-8">
+                <h2 class="text-2xl font-bold mb-4">Analysis Results</h2>
+                
+                <!-- Basic Statistics -->
+                <div class="grid grid-cols-2 gap-4 mb-8">
+                    <div class="bg-white p-4 rounded shadow">
+                        <h3 class="font-bold mb-2">Word Count</h3>
+                        <p id="word-count">-</p>
+                    </div>
+                    <div class="bg-white p-4 rounded shadow">
+                        <h3 class="font-bold mb-2">Character Count</h3>
+                        <p id="char-count">-</p>
+                    </div>
+                    <div class="bg-white p-4 rounded shadow">
+                        <h3 class="font-bold mb-2">Sentence Count</h3>
+                        <p id="sentence-count">-</p>
+                    </div>
+                    <div class="bg-white p-4 rounded shadow">
+                        <h3 class="font-bold mb-2">Avg Word Length</h3>
+                        <p id="avg-word-length">-</p>
+                    </div>
+                </div>
+                
+                <!-- Word Frequency Chart -->
+                <div class="bg-white p-4 rounded shadow">
+                    <h3 class="font-bold mb-4">Word Frequency</h3>
+                    <canvas id="word-freq-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        let wordFreqChart = null;
+
+        // Handle file selection
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        // Handle drag and drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-blue-500');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-blue-500');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-500');
+            handleFile(e.dataTransfer.files[0]);
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            handleFile(e.target.files[0]);
+        });
+
+        function handleFile(file) {
+            if (!file) return;
+            
+            if (!file.name.endsWith('.pdf')) {
+                alert('Please upload PDF files only');
+                return;
+            }
+            
+            if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                alert('File size must be less than 10MB');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            loading.classList.remove('hidden');
+            results.classList.add('hidden');
+            
+            fetch('/upload/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                displayResults(data);
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+            })
+            .finally(() => {
+                loading.classList.add('hidden');
+            });
+        }
+
+        function displayResults(data) {
+            document.getElementById('word-count').textContent = data.word_count;
+            document.getElementById('char-count').textContent = `${data.char_count} (${data.char_count_no_spaces} without spaces)`;
+            document.getElementById('sentence-count').textContent = data.sentence_count;
+            document.getElementById('avg-word-length').textContent = data.avg_word_length;
+            
+            // Create word frequency chart
+            const words = Object.keys(data.word_frequency);
+            const frequencies = Object.values(data.word_frequency);
+            
+            if (wordFreqChart) {
+                wordFreqChart.destroy();
+            }
+            
+            wordFreqChart = new Chart(document.getElementById('word-freq-chart'), {
+                type: 'bar',
+                data: {
+                    labels: words,
+                    datasets: [{
+                        label: 'Word Frequency',
+                        data: frequencies,
+                        backgroundColor: 'rgba(59, 130, 246, 0.5)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            results.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
