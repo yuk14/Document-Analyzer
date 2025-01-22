@@ -1,4 +1,3 @@
-import json
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -14,8 +13,6 @@ nlp = spacy.load('en_core_web_sm')
 
 def upload_document(request):
     if request.method == 'POST':
-        if 'file' not in request.FILES:
-            return JsonResponse({'error': 'No file uploaded'}, status=400)
         
         file = request.FILES['file']
         exclude_stopwords = request.POST.get('exclude_stopwords', 'false') == 'true'
