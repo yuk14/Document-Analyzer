@@ -27,17 +27,17 @@ A web application that analyzes PDF documents and provides detailed text statist
 
 ## Installation
 
-1. Clone the repository 
-bash
-git clone https://github.com/yourusername/document-analyzer.git
-cd document-analyzer
-
-2. Create and activate a virtual environment:
+1. Create and activate a virtual environment:
 
 ```bash
 
 python -m venv venv
-source venv/bin/activate # On Windows: venv\Scripts\activate
+source venv/bin/activate venv\Scripts\activate
+
+2. Clone the repository 
+bash
+git clone https://github.com/yuk14/document-analyzer.git
+cd document-analyzer
 
 3. Install dependencies:
 
@@ -49,17 +49,7 @@ pip install -r requirements.txt
 python -m spacy download en_core_web_sm
 ```
 
-5. Create necessary directories
-```bash
-mkdir media
-```
-
-6. Apply migrations
-```bash
-python manage.py migrate
-```
-
-7. Run the development server
+5. Run the development server
 ```bash
 python manage.py runserver
 ```
