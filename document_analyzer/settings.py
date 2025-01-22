@@ -10,9 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
-from pathlib import Path
-import os
-import nltk
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -125,32 +122,6 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
 
 # Increase max upload size to 10MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760
-
-
-# Set NLTK data path
-nltk.data.path.append(os.path.join(BASE_DIR, 'nltk_data'))
-
-nltk.download('punkt')
-nltk.download('stopwords')
-
-# Download NLTK data
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt')
-
-try:
-    nltk.data.find('corpora/stopwords')
-except LookupError:
-    nltk.download('stopwords')
-
-# Add NLTK data path
-NLTK_DATA = BASE_DIR / 'nltk_data'
-if not NLTK_DATA.exists():
-    NLTK_DATA.mkdir(parents=True)
-nltk.data.path.append(str(NLTK_DATA))
